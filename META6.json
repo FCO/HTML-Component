@@ -1,0 +1,25 @@
+{
+  "auth": "zef:FCO",
+  "authors": [
+    "Fernando Corrêa"
+  ],
+  "build-depends": [
+  ],
+  "depends": [
+  ],
+  "description": "blah blah blah",
+  "license": "Artistic-2.0",
+  "name": "HTML::Components",
+  "perl": "6.d",
+  "provides": {
+    "HTML::Components": "lib/HTML/Components.rakumod"
+  },
+  "resources": [
+  ],
+  "source-url": "",
+  "tags": [
+  ],
+  "test-depends": [
+  ],
+  "version": "0.0.1"
+}

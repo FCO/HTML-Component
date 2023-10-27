@@ -1,0 +1,6 @@
+use Test;
+use HTML::Components;
+
+pass "replace me";
+
+done-testing;
