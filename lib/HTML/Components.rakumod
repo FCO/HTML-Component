@@ -10,15 +10,19 @@ enum AutoCapitalize <off none on sentences words characters>;
 enum Dir <ltr rtl dir-auto>;                     # TODO: fix enum
 enum YesNo <no yes>;
 enum VirtualKeyboardPolicy <policy-auto manual>; # TODO: fix enum
+class Text {...}
 class HTML::Components {}
+class HTML::Components::Tag is HTML::Components {
+    multi method new(Str $value) { Text.new: :$value }
+}
 
-class Text is Str is HTML::Components {
-    method COERCE(Str $value) { ::?CLASS.new: :$value }
+class Text is Str is HTML::Components::Tag {
+    method COERCE(Str $value) { self.new: :$value }
 
     method RENDER { $.Str }
 }
 
-role Leaf is HTML::Components {
+role Leaf is HTML::Components::Tag {
     has Str                   @!access-key       is html-attr;
     has AutoCapitalize()      $!auto-capitalize  is html-attr;
     has Bool                  $!auto-focus       is html-attr;
@@ -91,6 +95,10 @@ role Leaf is HTML::Components {
                     " { $name }='{ value }'" with value
                 }
 
+                when Bool {
+                    " { $name }" if value
+                }
+
                 default {
                     " { $name }='{ value }'" with value
                 }
@@ -100,11 +108,16 @@ role Leaf is HTML::Components {
 }
 
 role Node is Leaf {
-    has HTML::Components @.children;
+    has HTML::Components::Tag @.children;
 
-    method add-child(HTML::Components $comp) {
+    multi method add-child(HTML::Components::Tag() $comp) {
         @!children.push: $comp;
         $comp
+    }
+
+    multi method add-child(&body) {
+        self.&body;
+        self
     }
 
     method RENDER {
@@ -121,10 +134,11 @@ sub all-html-attrs($type) { $type.^attributes.grep(HTMLAttr)».name».substr: 2 
 class BASE {...}
 class HEAD {...}
 class HTML {...}
+class BODY {...}
 enum _target <_self _blank _parent _top>;
 subset Target of Any where { !.defined || $_ ~~ Str|_target };
 
-role OnHTML does Node {
+role OnHTML {
     multi method base(Str :$href!, *%_ where { .keys.none ~~ "target" && .keys.all ~~ BASE.&all-html-attrs.any }) {
         $.add-child: BASE.new: :$href, |%_
     }
@@ -142,6 +156,9 @@ role OnHTML does Node {
         my $head = $.head: |(:$href with $href), |(:$target with $target), |%_;
         $head.&body;
         $head
+    }
+    multi method body(|c) {
+        self.add-child: BODY.new: |c
     }
 }
 
@@ -179,7 +196,7 @@ class LINK does Leaf {
 
 class TITLE {...}
 class META {...}
-role OnHead does Node {
+role OnHead {
     multi method title(*@title, *%_ where { .keys.all ~~ TITLE.&all-html-attrs.any }) {
         my $t = $.add-child: TITLE.new: |%_;
         $t.add-child: $_ for @title.duckmap: -> Text() $_ { $_ };
@@ -212,16 +229,131 @@ role OnHead does Node {
 }
 class TITLE does Node {}
 class META does Leaf {}
-class HEAD does OnHead {
+class HEAD {
     has URL @.profile is html-attr is DEPRECATED;
 }
 
-class HTML does OnHTML {
-    
+class HTML does OnHTML does Node { }
+
+class Ol {...}
+class Input {...}
+
+enum InputType <button checkbox color date datetime-local email file hidden upload-image month number password radio range reset search submit tel text time url week>;
+role OnBody {
+    method ol(|c)    { self.add-child: Ol.new: |c }
+    method input(|c) { self.add-child: Input.new: |c }
+
+    multi method input-checkbox(|c) { self.input: |c, type => checkbox }
+}
+
+class Li does OnBody does Node {
+    multi method new(Str $data, *%_) {
+        self.new: [ $data ], |%_
+    }
+    multi method new(*@data where @data > 0, *%_) {
+        self.new: @data, |%_
+    }
+    multi method new(@data, *%_) {
+        my $l = self.new: |%_;
+        $l.add-child: $_ for @data;
+        $l
+    }
+}
+
+role OnOl {
+    method li(|c) {
+        my Li $li .= new: |c;
+        self.add-child: $li;
+    }
+}
+class Ol does OnOl does Node {
+    multi method new(%data)      { self.new: |%data }
+    multi method new(@li, *%_) {
+        my Ol $ol .= new: |%_;
+        for @li -> $data {
+            $ol.li: $data
+        }
+        $ol
+    }
+    multi method new(+@li where @li > 0, *%_) {
+        Ol.new: @li, |%_
+    }
+    multi method new(Str $li, *%_) {
+        Ol.new: [ $li ], |%_
+    }
+}
+
+class Input does Leaf { # TODO: add all attributes
+    has InputType $.type    is html-attr = text;
+    has Str()     $.name    is html-attr;
+    has Bool      $.checked is html-attr;
+}
+
+class BODY does OnBody does Node {
+    has $.alink              is html-attr is DEPRECATED;
+    has $.background         is html-attr is DEPRECATED;
+    has $.bgcolor            is html-attr is DEPRECATED;
+    has $.bottom-margin      is html-attr is DEPRECATED;
+    has $.left-margin        is html-attr is DEPRECATED;
+    has $.link               is html-attr is DEPRECATED;
+    has $.on-after-print     is html-attr;
+    has $.on-before-print    is html-attr;
+    has $.on-before-load     is html-attr;
+    has $.on-blur            is html-attr;
+    has $.on-error           is html-attr;
+    has $.on-focus           is html-attr;
+    has $.on-hash-change     is html-attr;
+    has $.on-language-change is html-attr;
+    has $.on-load            is html-attr;
+    has $.on-message         is html-attr;
+    has $.on-offline         is html-attr;
+    has $.on-online          is html-attr;
+    has $.on-pop-state       is html-attr;
+    has $.on-redo            is html-attr;
+    has $.on-resize          is html-attr;
+    has $.on-storage         is html-attr;
+    has $.on-undo            is html-attr;
+    has $.on-unload          is html-attr;
+    has $.right-margin       is html-attr is DEPRECATED;
+    has $.text               is html-attr is DEPRECATED;
+    has $.top-margin         is html-attr is DEPRECATED;
+    has $.vlink              is html-attr is DEPRECATED;
+
+    multi method new(%data) { self.new: |%data }
+    multi method new(*@data where @data > 0, *%_) {
+        my $b = self.new: |%_;
+        for @data -> \data {
+            $b.add-child: data
+        }
+        $b
+    }
 }
 
 sub html(&body, *%_ where { .keys.all ~~ HTML.&all-html-attrs.any }) is export {
     my $html = HTML.new: |%_;
     $html.&body;
     $html
+}
+
+sub body(&func, *%_ where { .keys.all ~~ BODY.&all-html-attrs.any }) is export {
+    my $body = BODY.new: |%_;
+    $body.&func;
+    $body
+}
+
+class SNIPPET does OnOl does OnBody does OnHTML does OnHead does Node {}
+
+sub snippet(&func) is export {
+    #do given func SNIPPET.new { .children.head }
+    func SNIPPET.new # for now
+}
+
+role HTML::Component is HTML::Components {
+    method RENDER($) {...}
+    method render-root {
+        html -> HTML::Components $root { self.RENDER: $root }
+    }
+    method render {
+        snippet(-> HTML::Components $root { self.RENDER: $root }).RENDER
+    }
 }
