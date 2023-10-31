@@ -13,7 +13,7 @@ class Todo does HTML::Component {
 
     multi method new(Str $description, *%_) { self.new: :$description, |%_ }
 
-    method RENDER(HTML::Components $_) {
+    method RENDER(HTML::Components::Tag $_) {
         .li: {
             .input-checkbox: :name<done>, :checked($!done);
             .add-child: $!description;
