@@ -1,0 +1,34 @@
+use HTML::Component::Tag::Node;
+use HTML::Component::HTMLAttr;
+use HTML::Component::Tag::Methods::BODY;
+
+unit class HTML::Component::Tag::BODY does HTML::Component::Tag::Methods::BODY does HTML::Component::Tag::Node;
+
+has $.alink              is html-attr is DEPRECATED;
+has $.background         is html-attr is DEPRECATED;
+has $.bgcolor            is html-attr is DEPRECATED;
+has $.bottom-margin      is html-attr is DEPRECATED;
+has $.left-margin        is html-attr is DEPRECATED;
+has $.link               is html-attr is DEPRECATED;
+has $.on-after-print     is html-attr;
+has $.on-before-print    is html-attr;
+has $.on-before-load     is html-attr;
+has $.on-blur            is html-attr;
+has $.on-error           is html-attr;
+has $.on-focus           is html-attr;
+has $.on-hash-change     is html-attr;
+has $.on-language-change is html-attr;
+has $.on-load            is html-attr;
+has $.on-message         is html-attr;
+has $.on-offline         is html-attr;
+has $.on-online          is html-attr;
+has $.on-pop-state       is html-attr;
+has $.on-redo            is html-attr;
+has $.on-resize          is html-attr;
+has $.on-storage         is html-attr;
+has $.on-undo            is html-attr;
+has $.on-unload          is html-attr;
+has $.right-margin       is html-attr is DEPRECATED;
+has $.text               is html-attr is DEPRECATED;
+has $.top-margin         is html-attr is DEPRECATED;
+has $.vlink              is html-attr is DEPRECATED;
