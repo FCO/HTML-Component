@@ -19,6 +19,7 @@ sub html(|c) is export {
 # }
 
 method HTML {
+  my $*HTML-COMPONENT-RENDERING = True;
   $.RENDER: CALLERS::<self>;
   Empty
 }

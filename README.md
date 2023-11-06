@@ -12,9 +12,9 @@ use HTML::Component;
 
 unit class Todo does HTML::Component;
 
+has UInt   $.id = ++$;
 has Str()  $.description is required;
 has Bool() $.done = False;
-has        $!parent is built;
 
 multi method new($description) { self.new: :$description, |%_ }
 
@@ -38,9 +38,14 @@ method RENDER($_) {
 ```raku
 # examples/TodoList.rakumod
 use HTML::Component;
+use HTML::Component::Endpoint;
+use HTML::Component::Boilerplate;
 use Todo;
 
 unit class TodoList does HTML::Component;
+
+method new(|)   { $ //= self.bless }
+method LOAD($?) { self.new }
 
 has Todo @.todos;
 
@@ -50,64 +55,51 @@ method RENDER($_) {
       .add-child: $todo
     }
   }
-  ;
+  .form:
+    :endpoint(self.new-todo),
+    {
+      .input: :type<text>, :name<description>;
+      .input: :type<submit>;
+    }
+}
+
+method new-todo(Str :$description!)
+is endpoint{
+  :path</bla>,
+  :return(-> | { boilerplate :title("My TODO list"), { .add-child: TodoList.new } })
+} {
+  @!todos.push: Todo.new: :$description;
 }
 ```
 
 ```raku
-# running
+# humming-bird-todo.raku
+use v6.d;
+
+use Humming-Bird::Core;
 use HTML::Component::Boilerplate;
 use lib "examples";
 use TodoList;
 use Todo;
+use HTML::Component::Endpoint;
 
-given boilerplate
-    :title("My TODO list"),
-    {
-        .add-child: TodoList.new: :todos( ^5 .map: { Todo.new: "todo $_" } )
+my $index = boilerplate :title("My TODO list"), { .add-child: TodoList.new }
+my $html = $index.HTML;
+
+get('/', -> $request, $response {
+    $response.html($html);
+});
+
+for HTML::Component::Endpoint.endpoints {
+    if .verb.uc eq "GET" {
+        get .path, -> $request, $response {
+            $response.html: .run-defined(Any, |$request.query<>)
+        }
     }
-{
-    say .HTML
 }
 
-```
+listen(12345);
 
-```output
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset='utf-8'>
-        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-        <meta http-equiv='X-UA-Compatible' content='ie=edge'>
-        <title>
-            My TODO list
-        </title>
-    </head>
-    <body>
-        <ol>
-            <li class='todo'>
-                <input type='checkbox'>
-                todo 0
-            </li>
-            <li class='todo'>
-                <input type='checkbox'>
-                todo 1
-            </li>
-            <li class='todo'>
-                <input type='checkbox'>
-                todo 2
-            </li>
-            <li class='todo'>
-                <input type='checkbox'>
-                todo 3
-            </li>
-            <li class='todo'>
-                <input type='checkbox'>
-                todo 4
-            </li>
-        </ol>
-    </body>
-</html>
 ```
 
 # DESCRIPTION
