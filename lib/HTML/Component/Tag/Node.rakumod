@@ -12,6 +12,14 @@ multi method new(&body, *%_) {
     $obj
 }
 
+multi method add-children(+@components) {
+    $.add-child: $_ for @components
+}
+
+multi method add-child(@components) {
+    $.add-child: $_ for @components
+}
+
 multi method add-child(HTML::Component $comp) {
     @!children.push: $comp;
     $comp

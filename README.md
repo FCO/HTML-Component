@@ -51,9 +51,7 @@ has Todo @.todos;
 
 method RENDER($_) {
   .ol: {
-    for @!todos -> Todo $todo {
-      .add-child: $todo
-    }
+    .add-children: @!todos;
   }
   .form:
     :endpoint(self.new-todo),
@@ -66,14 +64,28 @@ method RENDER($_) {
 method new-todo(Str :$description!)
 is endpoint{
   :path</bla>,
-  :return(-> | { boilerplate :title("My TODO list"), { .add-child: TodoList.new } })
+  :redirect</>,
 } {
   @!todos.push: Todo.new: :$description;
 }
 ```
 
 ```raku
-# humming-bird-todo.raku
+# examples/App.rakumod
+use TodoList;
+use HTML::Component;
+use HTML::Component::Boilerplate;
+unit class App does HTML::Component;
+
+method RENDER($?) {
+  boilerplate
+    :title("My TODO list"),
+    *.add-child: TodoList.new
+}
+```
+
+```raku
+# examples/humming-bird-todo.raku
 use v6.d;
 
 use Humming-Bird::Core;
@@ -81,25 +93,26 @@ use HTML::Component::Boilerplate;
 use lib "examples";
 use TodoList;
 use Todo;
+use App;
 use HTML::Component::Endpoint;
 
-my $index = boilerplate :title("My TODO list"), { .add-child: TodoList.new }
+my $index = App.new.RENDER;
 my $html = $index.HTML;
 
 get('/', -> $request, $response {
-    $response.html($html);
+    $response.html(App.new.RENDER.HTML);
 });
 
 for HTML::Component::Endpoint.endpoints {
     if .verb.uc eq "GET" {
         get .path, -> $request, $response {
-            $response.html: .run-defined(Any, |$request.query<>)
+            $response.html: .run-defined(Any, |$request.query<>).Str;
+            $response.redirect: $_ with .redirect;
         }
     }
 }
 
 listen(12345);
-
 ```
 
 # DESCRIPTION

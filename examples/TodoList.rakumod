@@ -12,9 +12,7 @@ has Todo @.todos;
 
 method RENDER($_) {
   .ol: {
-    for @!todos -> Todo $todo {
-      .add-child: $todo
-    }
+    .add-children: @!todos;
   }
   .form:
     :endpoint(self.new-todo),
@@ -27,7 +25,7 @@ method RENDER($_) {
 method new-todo(Str :$description!)
 is endpoint{
   :path</bla>,
-  :return(-> | { boilerplate :title("My TODO list"), { .add-child: TodoList.new } })
+  :redirect</>,
 } {
   @!todos.push: Todo.new: :$description;
 }

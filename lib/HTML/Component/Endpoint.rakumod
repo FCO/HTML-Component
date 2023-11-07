@@ -13,6 +13,7 @@ has         $.load-meth = "LOAD";
 has Bool    $.undefined = &!method.signature.params.first.modifier ne ":D";
 has Bool    $.defined   = &!method.signature.params.first.modifier ne ":U";
 has         &.return    = -> :$component, :$method-output { $method-output };
+has         $.redirect;
 
 submethod TWEAK(|) {
   @endpoints.push: self
@@ -48,4 +49,3 @@ multi trait_mod:<is>(Method $method, :%endpoint (Str() :$path!, |)) is export {
     nextsame
   }
 }
-
