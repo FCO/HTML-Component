@@ -1,8 +1,5 @@
+use HTML::Component::EndpointList;
 unit class HTML::Component::Endpoint;
-
-my @endpoints;
-
-method endpoints { @endpoints }
 
 has Str()   $.verb      = "GET";
 has Str()   $.path;
@@ -16,7 +13,7 @@ has         &.return    = -> :$component, :$method-output { $method-output };
 has         $.redirect;
 
 submethod TWEAK(|) {
-  @endpoints.push: self
+  HTML::Component::EndpointList.add-endpoint: self
 }
 
 method load($id?) {
@@ -41,11 +38,10 @@ method run-undefined(|data) {
 }
 
 multi trait_mod:<is>(Method $method, :%endpoint (Str() :$path!, |)) is export {
+  my HTML::Component::Endpoint $endpoint .= new: :$method, |%endpoint;
+  HTML::Component::EndpointList.add-endpoint: $endpoint;
   $method.wrap: my method (|c) {
-    state HTML::Component::Endpoint $endpoint .= new: :$method, |%endpoint;
-    if $*HTML-COMPONENT-RENDERING {
-      return $endpoint
-    }
+    return $endpoint if $*HTML-COMPONENT-RENDERING;
     nextsame
   }
 }

@@ -1,3 +1,4 @@
+use HTML::Component::Endpoint;
 unit role HTML::Component;
 
 sub html(|c) is export {

@@ -1,5 +1,5 @@
-use HTML::Component;
 use HTML::Component::Endpoint;
+use HTML::Component;
 use HTML::Component::Boilerplate;
 use Todo;
 
