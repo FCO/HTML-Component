@@ -10,21 +10,22 @@ use Todo;
 use App;
 
 get('/', -> $request, $response {
-    $response.html(App.new.RENDER.HTML);
+    $response.html(App.new.RENDER(Any).HTML);
 });
 
 HTML::Component::EndpointList.map-endpoints: {
-    if .verb.uc eq "GET" {
-        get .path, -> $request, $response {
-            $response.html:
-                .run-defined(
-                    Any,
-                    |$request.query.kv.map(*.subst("+", " ").&uri_decode).Map
-                ).Str
-            ;
-            $response.redirect: $_ with .redirect;
+    ::("&{.verb.lc}").(.path, -> $request, $response {
+        with .run-defined(
+            |(
+                |$request.query.kv.map(*.subst("+", " ").&uri_decode).Map,
+                |$request.params.kv.map(*.subst("+", " ").&uri_decode).Map
+            ).Map
+        ).Str {
+            .&note;
+            $response.html: .Str
         }
-    }
+        $response.redirect: $_ with .redirect;
+    })
 }
 
 listen(12345);

@@ -1,12 +1,18 @@
 no precompilation;
 unit class HTML::Component::EndpointList;
 
-my @endpoints;
+my %endpoints is SetHash;
 
 method new { $ //= self.bless }
 
-method add-endpoint(|c) { @endpoints.push: |c }
+method add-endpoint($endpoint) { %endpoints{$endpoint} = True }
 
-method map-endpoints(|c) { @endpoints.map: |c }
+method map-endpoints(&block) { %endpoints.keys.map: &block }
 
-method list { @endpoints }
+method list { %endpoints.keys }
+
+multi method get(*%pars) {
+  %endpoints.keys.first: -> $endpoint {
+    [&&] %pars.kv.map: -> $key, $value { $endpoint.matches: |%($key => $value) }
+  }
+}

@@ -12,8 +12,8 @@ unit class HTML::Component::Tag::FORM does HTML::Component::Tag::Node does HTML:
 # has OnOff $.autocomplete   is html-attr;
 
 has HTML::Component::Endpoint $.endpoint;
-has Str()                     $.action     is html-attr = $!endpoint.path;
-has Str()                     $.method     is html-attr = $!endpoint.verb;
+has Str()                     $.action     is html-attr = $!endpoint.?path-call;
+has Str()                     $.method     is html-attr = $!endpoint.?verb;
 has Str()                     $.enctype    is html-attr;
 has Bool                      $.novalidate is html-attr;
 has Str()                     $.target     is html-attr;

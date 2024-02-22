@@ -6,5 +6,8 @@ unit class App does HTML::Component;
 method RENDER($?) {
   boilerplate
     :title("My TODO list"),
-    *.add-child: TodoList.new
+    :body{
+      .script: :src<https://unpkg.com/htmx.org@1.9.10>;
+      .add-child: TodoList.new;
+    }
 }

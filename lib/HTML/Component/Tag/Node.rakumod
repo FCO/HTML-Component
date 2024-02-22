@@ -36,6 +36,7 @@ multi method add-child(&body) {
 }
 
 method HTML {
+    say "method HTML in HTML::Component::Tag::Node";
     [
         callsame,
         @!children.map(*.HTML).join("\n").indent(4),
