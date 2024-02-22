@@ -1,25 +1,43 @@
 [![Actions Status](https://github.com/FCO/HTML-Component/actions/workflows/test.yml/badge.svg)](https://github.com/FCO/HTML-Component/actions)
 
-# NAME
+Still very early stage of development
+=====================================
 
-HTML::Components - is the begining of components (WiP)
+NAME
+====
 
-# SYNOPSIS
+`HTML::Components` - is the beginning of components (WiP)
+
+SYNOPSIS
+========
 
 ```raku
 # examples/Todo.rakumod
 use HTML::Component;
+use HTML::Component::Endpoint;
 
 unit class Todo does HTML::Component;
+
+my @todos;
 
 has UInt   $.id = ++$;
 has Str()  $.description is required;
 has Bool() $.done = False;
 
+submethod TWEAK(|) {
+  @todos[$!id - 1] := self;
+}
+
+method LOAD(UInt() :$id) {
+  @todos[$id - 1]
+}
+
 multi method new($description) { self.new: :$description, |%_ }
 
 method RENDER($_) {
   .li:
+    :htmx-endpoint(self.toggle),
+    :hx-swap<outerHTML>,
     :class<todo>,
     {
       .input-checkbox:
@@ -33,6 +51,10 @@ method RENDER($_) {
     }
   ;
 }
+
+method toggle is endpoint{ :return-component } {
+  $!done .= not
+}
 ```
 
 ```raku
@@ -44,9 +66,10 @@ use Todo;
 
 unit class TodoList does HTML::Component;
 
-method new(|)   { $ //= self.bless }
-method LOAD($?) { self.new }
+method new(|)  { $ //= self.bless }
+method LOAD(|) { self.new }
 
+has UInt $.id = ++$;
 has Todo @.todos;
 
 method RENDER($_) {
@@ -61,11 +84,7 @@ method RENDER($_) {
     }
 }
 
-method new-todo(Str :$description!)
-is endpoint{
-  :path</bla>,
-  :redirect</>,
-} {
+method new-todo(Str :$description!) is endpoint{ :verb<POST>, :redirect</> } {
   @!todos.push: Todo.new: :$description;
 }
 ```
@@ -80,54 +99,58 @@ unit class App does HTML::Component;
 method RENDER($?) {
   boilerplate
     :title("My TODO list"),
-    *.add-child: TodoList.new
+    :body{
+      .script: :src<https://unpkg.com/htmx.org@1.9.10>;
+      .add-child: TodoList.new;
+    }
 }
 ```
 
 ```raku
-# examples/humming-bird-todo.raku
-use v6.d;
-
-use HTML::Component::EndpointList;
-use Humming-Bird::Core;
-use HTML::Component::Boilerplate;
-use URI::Encode;
+# examples/cro-todo.raku
+use Cro::HTTP::Log::File;
+use Cro::HTTP::Server;
+use Cro::HTTP::Router;
+use HTML::Component::CroRouter;
+use Cro::HTTP::Log::File;
 use lib "examples";
-use TodoList;
-use Todo;
 use App;
 
-get('/', -> $request, $response {
-    $response.html(App.new.RENDER.HTML);
-});
-
-HTML::Component::EndpointList.map-endpoints: {
-    if .verb.uc eq "GET" {
-        get .path, -> $request, $response {
-            $response.html:
-                .run-defined(
-                    Any,
-                    |$request.query.kv.map(*.subst("+", " ").&uri_decode).Map
-                ).Str
-            ;
-            $response.redirect: $_ with .redirect;
-        }
-    }
+my $route = route {
+    root-component App.new
 }
 
-listen(12345);
+my $app = Cro::HTTP::Server.new(
+    host => '127.0.0.1',
+    port => 10000,
+    application => $route,
+    after => [
+        Cro::HTTP::Log::File.new(logs => $*OUT, errors => $*ERR)
+    ],
+  );
+
+  $app.start;
+
+  react whenever signal(SIGINT) {
+      $app.stop;
+      exit;
+  }
 ```
 
-# DESCRIPTION
+DESCRIPTION
+===========
 
-HTML::Components is comming...
+HTML::Components is coming...
 
-# AUTHOR
+AUTHOR
+======
 
-Fernando Corrêa de Oliveira <fernandocorrea@gmail.com>
+Fernando Corrêa de Oliveira `fernandocorrea@gmail.com`
 
-# COPYRIGHT AND LICENSE
+COPYRIGHT AND LICENSE
+=====================
 
 Copyright 2023 Fernando Corrêa de Oliveira
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
+

@@ -2,17 +2,16 @@ use HTML::Component;
 
 unit class HTML::Component::Boilerplate does HTML::Component;
 
-has Bool $.doctype = True;
-has Bool $.charset = True;
-has Str  $.viewport = "width=device-width, initial-scale=1.0";
+has Bool $.doctype         = True;
+has Bool $.charset         = True;
+has Str  $.viewport        = "width=device-width, initial-scale=1.0";
 has Str  $.x-ua-compatible = "ie=edge";
-has Str  $.title = "HTML::Component title";
+has Str  $.title           = "HTML::Component title";
 has      @.style-sheets;
 has Str  $.icon;
-has      &.body = -> $ {}
+has      &.body            = -> $ {}
 
-
-method RENDER {
+method RENDER($?) {
   html {
     .head: {
       .meta-charset if $!charset;
