@@ -5,9 +5,10 @@ use Todo;
 
 unit class TodoList does HTML::Component;
 
-method new(|)   { $ //= self.bless }
-method LOAD($?) { self.new }
+method new(|)  { $ //= self.bless }
+method LOAD(|) { self.new }
 
+has UInt $.id = ++$;
 has Todo @.todos;
 
 method RENDER($_) {
@@ -22,10 +23,6 @@ method RENDER($_) {
     }
 }
 
-method new-todo(Str :$description!)
-is endpoint{
-  :path</bla>,
-  :redirect</>,
-} {
+method new-todo(Str :$description!) is endpoint{ :verb<POST>, :redirect</> } {
   @!todos.push: Todo.new: :$description;
 }
