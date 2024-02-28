@@ -53,14 +53,11 @@ method load(|c) {
   $!class."$meth"(|c);
 }
 
-method run-defined(|data) {
-  my Capture $cap  .= new: :hash(%(|$!capture.hash, |data.hash)), :list[|$!capture.list, |data.list];
-  my $component     = $.load(|data);
-  my $method-output = $component."{$!method-name}"(|$cap);
+method after-method($component, $method-output is copy) {
+  my $*HTML-COMPONENT-RENDERING = True;
   if $!return-component {
     require ::("HTML::Component::Tag::SNIPPET");
     my $snippet = ::("HTML::Component::Tag::SNIPPET").new;
-    my $*HTML-COMPONENT-RENDERING = True;
     $component.RENDER: $snippet;
     $method-output = $snippet.HTML;
   }
@@ -69,18 +66,18 @@ method run-defined(|data) {
   $ret
 }
 
+method run-defined(|data) {
+  my Capture $cap  .= new: :hash(%(|$!capture.hash, |data.hash)), :list[|$!capture.list, |data.list];
+  my $component     = $.load(|data);
+  my $method-output = $component."{$!method-name}"(|$cap);
+  self.after-method: $component, $method-output;
+}
+
 method run-undefined(|data) {
   my $component = $!class;
   my Capture $cap  .= new: :hash(%(|$!capture.hash, |data.hash)), :list[|$!capture.list, |data.list];
   my $method-output = $!class."{&!method.name}"(|$cap);
-  if $!return-component {
-    require ::("HTML::Component::Tag::SNIPPET");
-    my ::("HTML::Component::Tag::SNIPPET") $snippet .= new;
-    $method-output = $component.RENDER: $snippet
-  }
-  my $ret = &!return.(:$component, :$method-output);
-  return $ret.HTML if $ret.^can: "HTML";
-  $ret
+  self.after-method: $component, $method-output;
 }
 
 # multi trait_mod:<is>(Method $method, :$endpoint) is export {
@@ -93,13 +90,13 @@ multi trait_mod:<is>(Method $method, :%endpoint) is export {
   $method.wrap: my method (|c) {
     if $*HTML-COMPONENT-RENDERING {
       if self.defined {
-        $endpoint.path-call = $endpoint.path.subst: /":id"/, self.id // "";
+        $endpoint .= clone: :path-call($endpoint.path.subst: /":id"/, self.id // "");
       } else {
-        $endpoint.path-call = $endpoint.path.subst: /":id/"/, "";
+        $endpoint .= clone: :path-call($endpoint.path.subst: /":id/"/, "");
       }
       return $endpoint
     } elsif !self.defined {
-        $endpoint.path-call = $endpoint.path.subst: /":id/"/, ""
+        $endpoint .= clone: :path-call($endpoint.path.subst: /":id/"/, "")
     }
     nextsame
   }

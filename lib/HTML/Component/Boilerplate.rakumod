@@ -1,4 +1,5 @@
 use HTML::Component;
+use HTML::Component::Tag::HTML;
 
 unit class HTML::Component::Boilerplate does HTML::Component;
 
@@ -26,5 +27,5 @@ method RENDER($?) {
 }
 
 sub boilerplate(&body = -> $ {}, *%_) is export {
-  HTML::Component::Boilerplate.new(:&body, |%_).RENDER
+  HTML::Component::Boilerplate.new(:&body, |%_).RENDER: Any
 }

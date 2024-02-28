@@ -14,5 +14,9 @@ unit class HTML::Component::Tag::SNIPPET
 ;
 
 method HTML {
-    @.children.map(*.HTML).join("\n")
+  @.children.map({
+    do given .?RENDER(self) // $_ {
+      .?HTML.Str // .Str // ""
+    }
+  }).join("\n")
 }

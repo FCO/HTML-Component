@@ -1,19 +1,18 @@
 use HTML::Component::Endpoint;
 use HTML::Component;
 use HTML::Component::Boilerplate;
-use Todo;
+use Red;
 
-unit class TodoList does HTML::Component;
+unit model TodoList does HTML::Component;
 
-method new(|)  { $ //= self.bless }
-method LOAD(|) { self.new }
+method LOAD(:$id) { self.^load: $id }
 
-has UInt $.id = ++$;
-has Todo @.todos;
+has UInt $.id    is serial;
+has      @.todos is relationship( *.list-id, :model<Todo> );
 
 method RENDER($_) {
   .ol: {
-    .add-children: @!todos;
+    .add-children: @!todos.Seq;
   }
   .form:
     :endpoint(self.new-todo),
@@ -24,5 +23,5 @@ method RENDER($_) {
 }
 
 method new-todo(Str :$description!) is endpoint{ :verb<POST>, :redirect</> } {
-  @!todos.push: Todo.new: :$description;
+  @!todos.create: :$description;
 }

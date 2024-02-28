@@ -10,4 +10,5 @@ method RENDER($?) {
       .script: :src<https://unpkg.com/htmx.org@1.9.10>;
       .add-child: TodoList.new;
     }
+  ;
 }

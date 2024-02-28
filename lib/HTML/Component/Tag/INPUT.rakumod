@@ -12,5 +12,5 @@ class HTML::Component::Tag::INPUT does HTML::Component::Tag::Leaf {
 
 class HTML::Component::Tag::INPUT-CHECKBOX is HTML::Component::Tag::INPUT {
   has InputType $.type    is html-attr = checkbox;
-  has Bool      $.checked is html-attr;
+  has Bool()    $.checked is html-attr;
 }

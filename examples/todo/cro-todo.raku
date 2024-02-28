@@ -20,6 +20,7 @@ my $app = Cro::HTTP::Server.new(
   );
 
   $app.start;
+  say "Listening at http://127.0.0.1:10000";
 
   react whenever signal(SIGINT) {
       $app.stop;

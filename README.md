@@ -12,7 +12,7 @@ SYNOPSIS
 ========
 
 ```raku
-# examples/Todo.rakumod
+# examples/todo/Todo.rakumod
 use HTML::Component;
 use HTML::Component::Endpoint;
 
@@ -58,7 +58,7 @@ method toggle is endpoint{ :return-component } {
 ```
 
 ```raku
-# examples/TodoList.rakumod
+# examples/todo/TodoList.rakumod
 use HTML::Component::Endpoint;
 use HTML::Component;
 use HTML::Component::Boilerplate;
@@ -82,6 +82,7 @@ method RENDER($_) {
       .input: :type<text>, :name<description>;
       .input: :type<submit>;
     }
+  ;
 }
 
 method new-todo(Str :$description!) is endpoint{ :verb<POST>, :redirect</> } {
@@ -90,24 +91,25 @@ method new-todo(Str :$description!) is endpoint{ :verb<POST>, :redirect</> } {
 ```
 
 ```raku
-# examples/App.rakumod
+# examples/todo/App.rakumod
 use TodoList;
 use HTML::Component;
 use HTML::Component::Boilerplate;
 unit class App does HTML::Component;
 
-method RENDER($?) {
+method RENDER($) {
   boilerplate
     :title("My TODO list"),
     :body{
       .script: :src<https://unpkg.com/htmx.org@1.9.10>;
       .add-child: TodoList.new;
     }
+  ;
 }
 ```
 
 ```raku
-# examples/cro-todo.raku
+# examples/todo/cro-todo.raku
 use Cro::HTTP::Log::File;
 use Cro::HTTP::Server;
 use Cro::HTTP::Router;
@@ -116,18 +118,21 @@ use Cro::HTTP::Log::File;
 use lib "examples";
 use App;
 
+my $route = route {
+    root-component App.new
+}
+
 my $app = Cro::HTTP::Server.new(
     host => '127.0.0.1',
     port => 10000,
-    application => route {
-        root-component App.new
-    },
+    application => $route,
     after => [
         Cro::HTTP::Log::File.new(logs => $*OUT, errors => $*ERR)
     ],
   );
 
   $app.start;
+  say "Listening at http://127.0.0.1:10000";
 
   react whenever signal(SIGINT) {
       $app.stop;

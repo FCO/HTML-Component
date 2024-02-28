@@ -16,7 +16,7 @@ my &handler = -> $endpoint, $id, $data? {
 }
 
 sub handle($endpoint, :$id) {
-    CATCH { default { say "ERROR: ", .gist } }
+    # CATCH { default { say "ERROR: ", .gist } }
     request-body
         "application/x-www-form-urlencoded" => &handler.assuming($endpoint, $id),
         &handler.assuming($endpoint, $id);
@@ -25,7 +25,7 @@ sub handle($endpoint, :$id) {
 
 sub root-component(HTML::Component $root) is export {
     get -> {
-        my Str() $html = $root.RENDER(Any).HTML;
+        my Str() $html = $root.?RENDER(Any) // $root;
         content 'text/html', $html;
     }
 

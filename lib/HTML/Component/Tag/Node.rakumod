@@ -1,6 +1,6 @@
 use HTML::Component::Tag::Leaf;
 use HTML::Component::Tag::Text;
-use HTML::Component;
+# use HTML::Component;
 
 unit role HTML::Component::Tag::Node is HTML::Component::Tag::Leaf;
 
@@ -35,11 +35,12 @@ multi method add-child(&body) {
     self
 }
 
-method HTML {
-    say "method HTML in HTML::Component::Tag::Node";
+method HTML(--> Str()) {
+    my $*HTML-COMPONENT-RENDERING = True;
+    for self.children<> { .?RENDER: self }
     [
         callsame,
-        @!children.map(*.HTML).join("\n").indent(4),
+        |@!children.map(*.?HTML).grep(*.defined)».?indent(4),
         "</{ $.tag-name }>"
     ].join: "\n"
 }

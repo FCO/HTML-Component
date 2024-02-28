@@ -52,7 +52,6 @@ submethod TWEAK(*%pars, :$translate where { !.defined || $_ ~~ Bool|YesNo }, :$h
         %!data{$key} = %pars{"data-{ $key }"}
     }
     with $htmx-endpoint {
-        note "htmx-endpoint -> $htmx-endpoint";
         $!htmx-endpoint = $htmx-endpoint;
         $!hx-get    = .path-call if .verb.uc eq "GET";
         $!hx-post   = .path-call if .verb.uc eq "POST";
@@ -65,14 +64,18 @@ submethod TWEAK(*%pars, :$translate where { !.defined || $_ ~~ Bool|YesNo }, :$h
 method tag-name { $.^shortname.lc }
 
 method HTML {
+    my $*HTML-COMPONENT-RENDERING = True;
     $.RENDER-ATTRIBUTES;
     "<{ $.tag-name }{ $.RENDER-ATTRIBUTES }>"
 }
+
+method Str { self.HTML }
 
 method RENDER-ATTRIBUTES {
     join "", do for @.^attributes.grep(HTML::Component::HTMLAttr) -> Attribute $attr {
         my $name = $attr.name.substr: 2;
         my \value = $attr.get_value(self);
+        next without value;
         given $attr.type {
             when Positional {
                 do if $attr.get_value: self {
