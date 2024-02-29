@@ -1,6 +1,7 @@
 use HTML::Component::Endpoint;
 use HTML::Component;
 use HTML::Component::Boilerplate;
+use HTML::Component::Traits;
 use Todo;
 
 unit class TodoList does HTML::Component;
@@ -15,15 +16,11 @@ method RENDER($_) {
   .ol: {
     .add-children: @!todos;
   }
-  .form:
-    :endpoint(self.new-todo),
-    {
-      .input: :type<text>, :name<description>;
-      .input: :type<submit>;
-    }
-  ;
+  .form: self.new-todo;
 }
 
-method new-todo(Str :$description!) is endpoint{ :verb<POST>, :redirect</> } {
+method new-todo(
+  Str :$description! is no-label, #= What should be done?
+) is endpoint{ :verb<POST>, :redirect</> } {
   @!todos.push: Todo.new: :$description;
 }

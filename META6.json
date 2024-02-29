@@ -29,6 +29,7 @@
     "HTML::Component::Tag::HEAD": "lib/HTML/Component/Tag/HEAD.rakumod",
     "HTML::Component::Tag::HTML": "lib/HTML/Component/Tag/HTML.rakumod",
     "HTML::Component::Tag::INPUT": "lib/HTML/Component/Tag/INPUT.rakumod",
+    "HTML::Component::Tag::LABEL": "lib/HTML/Component/Tag/LABEL.rakumod",
     "HTML::Component::Tag::LI": "lib/HTML/Component/Tag/LI.rakumod",
     "HTML::Component::Tag::LINK": "lib/HTML/Component/Tag/LINK.rakumod",
     "HTML::Component::Tag::Leaf": "lib/HTML/Component/Tag/Leaf.rakumod",
