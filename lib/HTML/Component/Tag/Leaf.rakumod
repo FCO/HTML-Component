@@ -1,6 +1,7 @@
 use HTML::Component::HTMLAttr;
 use HTML::Component::Enums;
 use HTML::Component::Tag;
+use HTML::Component::Encode;
 unit role HTML::Component::Tag::Leaf does HTML::Component::Tag;
 
 has Str                   @!access-key       is html-attr;
@@ -79,18 +80,18 @@ method RENDER-ATTRIBUTES {
         given $attr.type {
             when Positional {
                 do if $attr.get_value: self {
-                    " { $name }='{ value.join: " " }'"
+                    " { $name }='{ html-encode value.join: " " }'"
                 }
             }
             when Associative {
                 do if $attr.get_value: self {
                     join "", do for value.kv -> $key, $value {
-                        " { $name }-{ $key }='{ $value }'"
+                        " { $name }-{ $key }='{ html-encode $value }'"
                     }
                 }
             }
             when YesNo {
-                " { $name }='{ value }'" with value
+                " { $name }='{ html-encode value }'" with value
             }
 
             when Bool {
@@ -98,7 +99,7 @@ method RENDER-ATTRIBUTES {
             }
 
             default {
-                " { $name }='{ value }'" with value
+                " { $name }='{ html-encode value }'" with value
             }
         }
     }

@@ -15,6 +15,7 @@ has Bool()  $.return-component = False;
 has Str()   $.path             = "/{ $!class.^name.subst("::", "-", :g) }/:id/{ &!method.name }";
 has Str()   $.path-call is rw  = $!path;
 has         $.redirect;
+has         &.on-error;
 
 submethod TWEAK(|) {
   HTML::Component::EndpointList.add-endpoint: self
@@ -53,38 +54,47 @@ method load(|c) {
   $!class."$meth"(|c);
 }
 
-method after-method($component, $method-output is copy) {
-  my $*HTML-COMPONENT-RENDERING = True;
+sub new-snippet {
+  require ::("HTML::Component::Tag::SNIPPET");
+  ::("HTML::Component::Tag::SNIPPET").new;
+}
+
+sub render($component is copy) {
+  $component .= RENDER: new-snippet if $component.^can: "RENDER";
+  $component
+}
+
+method handle(Capture $data, $component) {
+  my Capture $cap .= new: :hash(%(|$!capture.hash, |$data.hash)), :list[|$!capture.list, |$data.list];
+  CATCH {
+    default {
+      with &!on-error {
+        my $new-snippet = new-snippet;
+        my $*HTML-COMPONENT-RENDERING = True;
+        my $err = &!on-error.($new-snippet, |$cap);
+        my $ret = render $err;
+        $ret .= HTML if $ret.^can: "HTML";
+        return $ret;
+      } else {
+        .rethrow
+      }
+    }
+  }
+  my $method-output = $component."{&!method.name}"(|$cap);
   if $!return-component {
-    require ::("HTML::Component::Tag::SNIPPET");
-    my $snippet = ::("HTML::Component::Tag::SNIPPET").new;
-    $component.RENDER: $snippet;
-    $method-output = $snippet.HTML;
+    $method-output = render $component;
   }
   my $ret = &!return.(:$component, :$method-output);
-  return $ret.HTML if $ret.^can: "HTML";
+  $ret .= &render;
+  $ret .= HTML if $ret.^can: "HTML";
   $ret
 }
 
-method run-defined(|data) {
-  my Capture $cap  .= new: :hash(%(|$!capture.hash, |data.hash)), :list[|$!capture.list, |data.list];
-  my $component     = $.load(|data);
-  my $method-output = $component."{$!method-name}"(|$cap);
-  self.after-method: $component, $method-output;
-}
+method run-defined(|data) { self.handle: data, $.load(|data) }
 
-method run-undefined(|data) {
-  my $component = $!class;
-  my Capture $cap  .= new: :hash(%(|$!capture.hash, |data.hash)), :list[|$!capture.list, |data.list];
-  my $method-output = $!class."{&!method.name}"(|$cap);
-  self.after-method: $component, $method-output;
-}
+method run-undefined(|data) { self.handle: data, $!class }
 
-# multi trait_mod:<is>(Method $method, :$endpoint) is export {
-#   trait_mod:<is>($method, :endpoint{})
-# }
-
-multi trait_mod:<is>(Method $method, :%endpoint) is export {
+multi trait_mod:<is>(Method $method, :%endpoint!) is export {
   my HTML::Component::Endpoint $endpoint .= new: :$method, |%endpoint;
   HTML::Component::EndpointList.add-endpoint: $endpoint;
   $method.wrap: my method (|c) {
@@ -100,4 +110,8 @@ multi trait_mod:<is>(Method $method, :%endpoint) is export {
     }
     nextsame
   }
+}
+
+multi trait_mod:<is>(Method $method, :$endpoint!) is export {
+  trait_mod:<is>($method, :endpoint{})
 }

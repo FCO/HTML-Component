@@ -20,41 +20,48 @@ has Str()                     $.target     is html-attr;
 
 multi method new(
   HTML::Component::Endpoint $endpoint!,
-  %data?,
+  $data = Nil,
   Str() :$submit-value,
   Bool() :$add-submit = True,
   *%attrs
 ) {
   do given self.new(:$endpoint, |%attrs) {
     for $endpoint.method.signature.params.grep: { .named && !.slurpy } -> $param {
-      my Str() $id   = $param.WHICH;
-      my Str() $name = $param.usage-name.subst: "-", "_", :g;
-      my $value      = $_ with %data{$name} // $param.default andthen .();
-      my Str $label  = $param.?label // $param.usage-name.subst("-", " ", :g).tclc;
+      my Str() $id    = $param.WHICH;
+      my Str() $name  = $param.usage-name.subst: "-", "_", :g;
+      my       $value = $_ with $data{$name} // ( $param.default andthen .() );
+      my Str() $label = $param.?label // $param.usage-name.subst("-", " ", :g).tclc;
 
-      when $param.type ~~ Str {
-        .label:
-          :for($id),
-          $param.usage-name.subst("-", " ", :g).tclc,
-        unless $param.?no-label;
-        .input-text:
-          :$name,
-          :$id,
-          |(:value($_) with $value),
-          |(:placeholder($_) with $param.WHY)
-        ;
+      given $_ {
+        when $param.type ~~ Str {
+          .label:
+            :for($id),
+            $param.usage-name.subst("-", " ", :g).tclc,
+          unless $param.?no-label;
+          .input-text:
+            :$name,
+            :$id,
+            |(:value($_) with $value),
+            |(:placeholder($_) with $param.WHY)
+          ;
+        }
+        when $param.type ~~ Bool {
+          .input-checkbox:
+            :$name,
+            :$id,
+            |(:checked($_) with $value)
+          ;
+          .label:
+            :for($id),
+            $param.usage-name.subst("-", " ", :g).tclc,
+          unless $param.?no-label;
+        }
       }
-      when $param.type ~~ Bool {
-        .input-checkbox:
-          :$name,
-          :$id,
-          |(:checked($_) with $value)
-        ;
-        .label:
-          :for($id),
-          $param.usage-name.subst("-", " ", :g).tclc,
-        unless $param.?no-label;
+      if $data.DEFINITE && ( $data{$name} !~~ ($param.type & $param.constraints) ) {
+        .br;
+        .span: "$name is invalid"
       }
+      .br;
     }
     .input-submit: $submit-value if $add-submit;
     $_

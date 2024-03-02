@@ -21,7 +21,6 @@ HTML::Component::EndpointList.map-endpoints: {
                 |$request.params.kv.map(*.subst("+", " ").&uri_decode).Map
             ).Map
         ).Str {
-            .&note;
             $response.html: .Str
         }
         $response.redirect: $_ with .redirect;

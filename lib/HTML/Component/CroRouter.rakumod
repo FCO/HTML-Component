@@ -1,5 +1,6 @@
 use Cro::HTTP::Router;
 use HTML::Component::EndpointList;
+use HTML::Component::Tag::SNIPPET;
 use HTML::Component;
 
 my &handler = -> $endpoint, $id, $data? {
@@ -25,7 +26,9 @@ sub handle($endpoint, :$id) {
 
 sub root-component(HTML::Component $root) is export {
     get -> {
-        my Str() $html = $root.?RENDER(Any) // $root;
+        my $*HTML-COMPONENT-RENDERING = True;
+        my HTML::Component::Tag::SNIPPET $snippet .= new;
+        my Str() $html = $root.?RENDER($snippet);
         content 'text/html', $html;
     }
 

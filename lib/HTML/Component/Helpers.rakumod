@@ -15,6 +15,16 @@ sub add-methods-to-tag(Mu $tag, +@sub-tags) is export {
   }
 }
 
+sub html-encode($str) is export {
+    $str.trans:
+        /\&/ => '&amp;',
+        /\</ => '&lt;',
+        /\>/ => '&gt;',
+        /\"/ => '&quot;',
+        /<[\xA0..\xD8FF \xE000..\xFFFD]>{}/
+            => { '&#' ~ $/.ord ~ ';' },
+}
+
 role HTML::Component::PositionalsToValues[*@keys where *.elems > 0] {
   multi method new(*@values where *.elems > 0, *%_) {
     self.new: |%_, |%( @keys Z[=>] @values )
