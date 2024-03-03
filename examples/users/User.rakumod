@@ -2,7 +2,7 @@ use HTML::Component;
 use HTML::Component::Endpoint;
 use Red;
 
-unit model User does HTML::Component;
+unit model User does HTML::Component is endpoint;
 
 has UInt $.id     is serial;
 has Str  $.name   is unique;

@@ -25,28 +25,43 @@ sub handle($endpoint, :$id) {
 }
 
 sub root-component(HTML::Component $root) is export {
+    my HTML::Component::EndpointList $endpoint-list .= new;
+
     get -> {
+        # say "GET /";
         my $*HTML-COMPONENT-RENDERING = True;
         my HTML::Component::Tag::SNIPPET $snippet .= new;
         my Str() $html = $root.?RENDER($snippet);
         content 'text/html', $html;
     }
 
-    my HTML::Component::EndpointList $endpoint-list .= new;
+    get -> Str $class where $endpoint-list.get(:verb<GET>, :$class, :!method, :!id).so {
+        # say "GET /class";
+        handle $endpoint-list.get(:verb<GET>, :$class, :!method, :!id);
+    }
 
-    get -> Str $class, $id, Str $method where $endpoint-list.get(:verb<GET>, :$class, :$method, :id).so {
+    get -> Str $class, Int $id where $endpoint-list.get(:verb<GET>, :$class, :!method, :id).so {
+        # say "GET /class/id";
+        handle $endpoint-list.get(:verb<GET>, :$class, :!method, :id), :$id;
+    }
+
+    get -> Str $class, Int $id, Str $method where $endpoint-list.get(:verb<GET>, :$class, :$method, :id).so {
+        # say "GET /class/id/method";
         handle $endpoint-list.get(:verb<GET>, :$class, :$method, :id), :$id;
     }
 
     get -> Str $class, Str $method where $endpoint-list.get(:verb<GET>, :$class, :$method, :!id).so {
+        # say "GET /class/method";
         handle $endpoint-list.get(:verb<GET>, :$class, :$method, :!id);
     }
 
-    post -> Str $class, $id, Str $method where $endpoint-list.get(:verb<POST>, :$class, :$method, :id).so {
+    post -> Str $class, Int $id, Str $method where $endpoint-list.get(:verb<POST>, :$class, :$method, :id).so {
+        # say "GET /class/id/method";
         handle $endpoint-list.get(:verb<POST>, :$class, :$method, :id), :$id;
     }
 
     post -> Str $class, Str $method where $endpoint-list.get(:verb<POST>, :$class, :$method, :!id).so {
+        say "POST /class/method";
         handle $endpoint-list.get(:verb<POST>, :$class, :$method, :!id);
     }
 }

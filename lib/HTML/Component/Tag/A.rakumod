@@ -1,3 +1,4 @@
+use HTML::Component::Endpoint;
 use HTML::Component::Tag::Node;
 use HTML::Component::HTMLAttr;
 use HTML::Component::Enums;
@@ -9,4 +10,6 @@ unit class HTML::Component::Tag::A
   does HTML::Component::PositionalsToValues["href"]
 ;
 
+has  HTML::Component::Endpoint() $.endpoint;
+has $.href    is html-attr = $!endpoint andthen .path-call;
 has $.onclick is html-attr;

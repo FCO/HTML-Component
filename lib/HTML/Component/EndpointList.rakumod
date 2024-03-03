@@ -13,6 +13,16 @@ method list { %endpoints.keys }
 
 multi method get(*%pars) {
   %endpoints.keys.first: -> $endpoint {
-    [&&] %pars.kv.map: -> $key, $value { $endpoint.matches: |%($key => $value) }
+    [&&] %pars.kv.map: -> $key, $value {
+      $endpoint.matches: |%($key => $value)
+    }
   }
+}
+
+method endpoint-from-component($component) {
+  self.get:
+    :verb<GET>,
+    :class($component.^name),
+    :!method,
+    :!id,
 }

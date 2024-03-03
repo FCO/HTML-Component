@@ -2,6 +2,7 @@ use HTML::Component::HTMLAttr;
 use HTML::Component::Enums;
 use HTML::Component::Tag;
 use HTML::Component::Encode;
+use HTML::Component::EndpointList;
 unit role HTML::Component::Tag::Leaf does HTML::Component::Tag;
 
 has Str                   @!access-key       is html-attr;
@@ -37,14 +38,14 @@ has Str()                 %!title            is html-attr;
 has YesNo()               $!translate        is html-attr;
 has VirtualKeyboardPolicy $!virtual-keyboard-policy is html-attr;
 
-has HTML::Component::Endpoint $.htmx-endpoint;
-has                           $.hx-get    is html-attr;
-has                           $.hx-post   is html-attr;
-has                           $.hx-put    is html-attr;
-has                           $.hx-delete is html-attr;
-has                           $.hx-swap   is html-attr;
+has  HTML::Component::Endpoint() $.htmx-endpoint;
+has  $.hx-get    is html-attr;
+has  $.hx-post   is html-attr;
+has  $.hx-put    is html-attr;
+has  $.hx-delete is html-attr;
+has  $.hx-swap   is html-attr;
 
-submethod TWEAK(*%pars, :$translate where { !.defined || $_ ~~ Bool|YesNo }, :$htmx-endpoint) {
+submethod TWEAK(*%pars, :$translate where { !.defined || $_ ~~ Bool|YesNo }, :$htmx-endpoint is copy) {
     if $translate.defined && $translate ~~ Bool {
         $!translate = $translate ?? yes !! no;
     }
@@ -53,11 +54,13 @@ submethod TWEAK(*%pars, :$translate where { !.defined || $_ ~~ Bool|YesNo }, :$h
         %!data{$key} = %pars{"data-{ $key }"}
     }
     with $htmx-endpoint {
-        $!htmx-endpoint = $htmx-endpoint;
-        $!hx-get    = .path-call if .verb.uc eq "GET";
-        $!hx-post   = .path-call if .verb.uc eq "POST";
-        $!hx-put    = .path-call if .verb.uc eq "PUT";
-        $!hx-delete = .path-call if .verb.uc eq "DELETE";
+        # $!htmx-endpoint = $htmx-endpoint;
+        given $!htmx-endpoint {
+            $!hx-get    = .path-call if .verb.uc eq "GET";
+            $!hx-post   = .path-call if .verb.uc eq "POST";
+            $!hx-put    = .path-call if .verb.uc eq "PUT";
+            $!hx-delete = .path-call if .verb.uc eq "DELETE";
+        }
     }
     nextsame
 }

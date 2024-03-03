@@ -2,20 +2,24 @@ use HTML::Component::EndpointList;
 unit class HTML::Component::Endpoint;
 
 has Str()   $.verb             = "GET";
-has         &.method           is required;
-has Str     $.method-name      = &!method.name;
+has         &.method;
+has Str     $.method-name      = &!method ?? &!method.name !! Nil;
 has         $.class            = &!method.package;
 has Str     $.class-name       = $!class.^name;
 has Capture $.capture          = \();
 has         $.load-meth        = "LOAD";
-has Bool    $.undefined        = &!method.signature.params.first.modifier ne ":D";
-has Bool    $.defined          = &!method.signature.params.first.modifier ne ":U";
+has Bool    $.undefined        = &!method ?? &!method.signature.params.first.modifier ne ":D" !! True;
+has Bool    $.defined          = &!method ?? &!method.signature.params.first.modifier ne ":U" !! True;
 has         &.return           = -> :$component, :$method-output { $method-output };
 has Bool()  $.return-component = False;
-has Str()   $.path             = "/{ $!class.^name.subst("::", "-", :g) }/:id/{ &!method.name }";
+has Str()   $.path             = "/{ $!class.^name.subst("::", "-", :g) }/:id{ "/{ &!method.name }" if &!method }";
 has Str()   $.path-call is rw  = $!path;
 has         $.redirect;
 has         &.on-error;
+
+multi method new($from) {
+  HTML::Component::EndpointList.endpoint-from-component($from.WHAT).transform($from)
+}
 
 submethod TWEAK(|) {
   HTML::Component::EndpointList.add-endpoint: self
@@ -29,8 +33,12 @@ multi method matches(:$verb!) {
   $!verb eq $verb;
 }
 
+multi method matches(:$method! where *.not) {
+  &!method.defined.not;
+}
+
 multi method matches(:$method!) {
-  $!method-name eq $method;
+  $!method-name andthen * eq $method;
 }
 
 multi method matches(:$class!) {
@@ -65,12 +73,12 @@ sub render($component is copy) {
 }
 
 method handle(Capture $data, $component) {
+  my $*HTML-COMPONENT-RENDERING = True without &!method;
   my Capture $cap .= new: :hash(%(|$!capture.hash, |$data.hash)), :list[|$!capture.list, |$data.list];
   CATCH {
     default {
-      with &!on-error {
+      if &!on-error {
         my $new-snippet = new-snippet;
-        my $*HTML-COMPONENT-RENDERING = True;
         my $err = &!on-error.($new-snippet, |$cap);
         my $ret = render $err;
         $ret .= HTML if $ret.^can: "HTML";
@@ -80,7 +88,7 @@ method handle(Capture $data, $component) {
       }
     }
   }
-  my $method-output = $component."{&!method.name}"(|$cap);
+  my $method-output = &!method.defined ?? $component."{&!method.name}"(|$cap) !! $component;
   if $!return-component {
     $method-output = render $component;
   }
@@ -94,24 +102,38 @@ method run-defined(|data) { self.handle: data, $.load(|data) }
 
 method run-undefined(|data) { self.handle: data, $!class }
 
+method transform($component) {
+  do if $*HTML-COMPONENT-RENDERING {
+    do if $component.defined {
+      self.clone: :path-call(self.path.subst: /":id"/, $component.id // "");
+    } else {
+      self.clone: :path-call(self.path.subst: /":id/"/, "");
+    }
+  } elsif !$component.defined {
+      self.clone: :path-call(self.path.subst: /":id/"/, "")
+  } else {
+    self
+  }
+}
+
 multi trait_mod:<is>(Method $method, :%endpoint!) is export {
   my HTML::Component::Endpoint $endpoint .= new: :$method, |%endpoint;
   HTML::Component::EndpointList.add-endpoint: $endpoint;
   $method.wrap: my method (|c) {
-    if $*HTML-COMPONENT-RENDERING {
-      if self.defined {
-        $endpoint .= clone: :path-call($endpoint.path.subst: /":id"/, self.id // "");
-      } else {
-        $endpoint .= clone: :path-call($endpoint.path.subst: /":id/"/, "");
-      }
-      return $endpoint
-    } elsif !self.defined {
-        $endpoint .= clone: :path-call($endpoint.path.subst: /":id/"/, "")
-    }
+    return $endpoint.transform: self if $*HTML-COMPONENT-RENDERING;
     nextsame
   }
 }
 
 multi trait_mod:<is>(Method $method, :$endpoint!) is export {
   trait_mod:<is>($method, :endpoint{})
+}
+
+multi trait_mod:<is>(Mu:U $component, :%endpoint!) is export {
+  my HTML::Component::Endpoint $endpoint .= new: :class($component), |%endpoint;
+  HTML::Component::EndpointList.add-endpoint: $endpoint;
+}
+
+multi trait_mod:<is>(Mu:U $component, :$endpoint!) is export {
+  trait_mod:<is>($component, :endpoint{})
 }

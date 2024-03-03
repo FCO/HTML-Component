@@ -4,6 +4,7 @@ use Cro::HTTP::Router;
 use HTML::Component::CroRouter;
 use Cro::HTTP::Log::File;
 use lib "examples";
+use App;
 use User;
 use Red;
 
@@ -12,11 +13,14 @@ red-defaults "SQLite";
 
 schema(User).create;
 
+User.^create(name => "John", email => "john.doe@domain.com");
+User.^create(name => "Jane", email => "jane.doe@domain.com");
+
 my $app = Cro::HTTP::Server.new(
     host => '127.0.0.1',
     port => 10000,
     application => route {
-        root-component User
+        root-component App.new
     },
   );
 
