@@ -1,5 +1,5 @@
 use Test;
-use HTML::Components;
+use HTML::Component;
 
 pass "replace me";
 

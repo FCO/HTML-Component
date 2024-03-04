@@ -13,7 +13,7 @@ sub html(|c) is export {
 
 =head1 NAME
 
-C<HTML::Components> - is the beginning of components (WiP)
+C<HTML::Component> - is the beginning of components (WiP)
 
 =head1 SYNOPSIS
 
@@ -145,7 +145,7 @@ my $app = Cro::HTTP::Server.new(
 
 =head1 DESCRIPTION
 
-HTML::Components is coming...
+HTML::Component is coming...
 
 =head1 AUTHOR
 

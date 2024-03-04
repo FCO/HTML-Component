@@ -6,7 +6,7 @@ Still very early stage of development
 NAME
 ====
 
-`HTML::Components` - is the beginning of components (WiP)
+`HTML::Component` - is the beginning of components (WiP)
 
 SYNOPSIS
 ========
@@ -140,7 +140,7 @@ my $app = Cro::HTTP::Server.new(
 DESCRIPTION
 ===========
 
-HTML::Components is coming...
+HTML::Component is coming...
 
 AUTHOR
 ======
