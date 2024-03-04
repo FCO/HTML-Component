@@ -35,6 +35,7 @@ method create-user(
   Bool() :$active = True,
 ) is endpoint{
   :verb<POST>,
+  :redirect</>,
   :on-error(-> $snippet, *%pars {
     self.RENDER: $snippet, %pars
   }),

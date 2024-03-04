@@ -37,7 +37,7 @@ multi method add-child(&body) {
 
 method HTML(--> Str()) {
     my $*HTML-COMPONENT-RENDERING = True;
-    for self.children<> { .?RENDER: self }
+    for @!children { .?RENDER: self }
     [
         callsame,
         |@!children.map(*.?HTML).grep(*.defined)».?indent(4),

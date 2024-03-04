@@ -10,6 +10,6 @@ unit class HTML::Component::Tag::A
   does HTML::Component::PositionalsToValues["href"]
 ;
 
-has  HTML::Component::Endpoint() $.endpoint;
-has $.href    is html-attr = $!endpoint andthen .path-call;
+has HTML::Component::Endpoint() $.endpoint;
+has $.href    is html-attr = $!endpoint.defined ?? $!endpoint.path-call !! Nil;
 has $.onclick is html-attr;
